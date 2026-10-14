@@ -5,11 +5,11 @@ ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
 mkdir -p "$ROOT/.vendor"
 jq -e 'type == "array" and all(.[]; (.name|type)=="string" and (.url|type)=="string" and (.rev|type)=="string" and (.paths|type)=="array" and all(.paths[]; type=="string"))' "$ROOT/skill-sources.json" >/dev/null
 jq -c '.[]' "$ROOT/skill-sources.json" | while IFS= read -r row; do
+  printf '%s' "$row" | jq -e '.name | test("\\A[a-z0-9][a-z0-9-]*\\z")' >/dev/null || { echo 'Unsafe checkout name' >&2; exit 1; }
+  printf '%s' "$row" | jq -e '.rev | test("\\A[0-9a-f]{40}\\z")' >/dev/null || { echo 'Invalid revision' >&2; exit 1; }
   name=$(printf '%s' "$row" | jq -r '.name')
   url=$(printf '%s' "$row" | jq -r '.url')
   rev=$(printf '%s' "$row" | jq -r '.rev')
-  echo "$name" | grep -Eq '^[a-z0-9][a-z0-9-]*$' || { echo "Unsafe checkout name: $name" >&2; exit 1; }
-  echo "$rev" | grep -Eq '^[0-9a-f]{40}$' || { echo "Invalid revision: $rev" >&2; exit 1; }
   printf '%s' "$row" | jq -e 'all(.paths[]; . != "" and (startswith("/")|not) and (contains("\n")|not) and (split("/")|all(.[]; . != ".." and . != "." and . != "")))' >/dev/null
   dest="$ROOT/.vendor/$name"
   if [ -e "$dest" ] || [ -L "$dest" ]; then

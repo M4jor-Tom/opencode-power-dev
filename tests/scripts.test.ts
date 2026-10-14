@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, cpSync, writeFileSync, readFileSync, rmSync, chmodSync, renameSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFileSync, spawnSync } from 'node:child_process';
 import test from 'node:test';
-const scripts = new URL('../scripts/', import.meta.url).pathname;
+const scripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const git = (cwd: string, ...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' }).trim();
 const run = (root: string, script: string, env = process.env, ...args: string[]) => spawnSync('sh', [join(root, 'scripts', script), ...args], { env, encoding: 'utf8' });
 test('setup pins, offline reuse, dirty/foreign/fetch failures and safe names', () => {
@@ -26,7 +27,14 @@ test('setup pins, offline reuse, dirty/foreign/fetch failures and safe names', (
     git(join(root, '.vendor', 'example'), 'checkout', '--', '.');
     manifest('example', renamed, rev); assert.notEqual(run(root, 'setup.sh').status, 0);
     assert.equal(git(join(root, '.vendor', 'example'), 'rev-parse', 'HEAD'), rev);
-    for (const name of ['../escape', 'UPPER']) { manifest(name, renamed, rev); assert.notEqual(run(root, 'setup.sh').status, 0); }
+    for (const name of ['../escape', 'UPPER', 'newline\nbad', 'newline-trailing\n']) {
+      manifest(name, renamed, rev);
+      assert.notEqual(run(root, 'setup.sh').status, 0, `accepted unsafe name ${JSON.stringify(name)}`);
+      assert.equal(existsSync(join(root, '.vendor', name)), false);
+    }
+    manifest('revision-newline', renamed, `${rev}\n`);
+    assert.notEqual(run(root, 'setup.sh').status, 0, 'accepted trailing-newline revision');
+    assert.equal(existsSync(join(root, '.vendor', 'revision-newline')), false);
     manifest('other', join(base, 'missing'), rev); assert.notEqual(run(root, 'setup.sh').status, 0); assert.equal(existsSync(join(root, '.vendor', 'other')), false);
     manifest('example', renamed, 'not-a-rev'); assert.notEqual(run(root, 'setup.sh').status, 0);
     manifest('new', renamed, 'a'.repeat(40)); assert.notEqual(run(root, 'setup.sh').status, 0); assert.equal(existsSync(join(root, '.vendor', 'new')), false);
