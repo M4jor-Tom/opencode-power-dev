@@ -42,6 +42,35 @@ test('setup pins, offline reuse, dirty/foreign/fetch failures and safe names', (
     assert.notEqual(run(root, 'setup.sh').status, 0); assert.equal(existsSync(join(root, '.vendor', 'new')), false);
   } finally { rmSync(base, { recursive: true, force: true }); }
 });
+test('setup refuses failed Git status and edits during fetch', () => {
+  const base = mkdtempSync(join(tmpdir(), 'profile status '));
+  try {
+    const origin = join(base, 'origin'); mkdirSync(origin); git(origin, 'init', '-q'); git(origin, 'config', 'user.email', 'test@example.com'); git(origin, 'config', 'user.name', 'Tester');
+    mkdirSync(join(origin, 'skills', 'example'), { recursive: true });
+    const source = join(origin, 'skills', 'example', 'SKILL.md'); writeFileSync(source, 'first');
+    git(origin, 'add', '.'); git(origin, 'commit', '-qm', 'first'); const first = git(origin, 'rev-parse', 'HEAD');
+    writeFileSync(source, 'second'); git(origin, 'add', '.'); git(origin, 'commit', '-qm', 'second'); const second = git(origin, 'rev-parse', 'HEAD');
+    const root = join(base, 'profile with spaces'); mkdirSync(join(root, 'scripts'), { recursive: true }); cpSync(join(scripts, 'setup.sh'), join(root, 'scripts', 'setup.sh'));
+    const manifest = (rev: string) => writeFileSync(join(root, 'skill-sources.json'), JSON.stringify([{ name: 'example', url: origin, rev, paths: ['skills/example'] }]));
+    manifest(first); assert.equal(run(root, 'setup.sh').status, 0);
+    const dest = join(root, '.vendor', 'example'); const skill = join(dest, 'skills', 'example', 'SKILL.md');
+    writeFileSync(skill, 'preserve corrupt-index edit'); writeFileSync(join(dest, '.git', 'index'), 'corrupt');
+    manifest(second);
+    assert.notEqual(run(root, 'setup.sh').status, 0, 'failed status accepted');
+    assert.equal(readFileSync(skill, 'utf8'), 'preserve corrupt-index edit');
+    assert.equal(git(dest, 'rev-parse', 'HEAD'), first);
+    rmSync(join(dest, '.git', 'index')); git(dest, 'reset', '--hard', '--quiet');
+    const bin = join(base, 'bin'); mkdirSync(bin);
+    writeFileSync(join(bin, 'git'), `#!/bin/sh
+if [ "$3" = fetch ]; then printf '%s' 'preserve fetch-time edit' > "$INJECT_SKILL"; fi
+exec ${JSON.stringify(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim())} "$@"
+`); chmodSync(join(bin, 'git'), 0o755);
+    const result = run(root, 'setup.sh', { ...process.env, PATH: `${bin}:${process.env.PATH}`, INJECT_SKILL: skill });
+    assert.notEqual(result.status, 0, 'fetch-time edit was replaced');
+    assert.equal(readFileSync(skill, 'utf8'), 'preserve fetch-time edit');
+    assert.equal(git(dest, 'rev-parse', 'HEAD'), first);
+  } finally { rmSync(base, { recursive: true, force: true }); }
+});
 test('run forwards argv and isolates runtime while capturing caller XDG', () => {
   const base = mkdtempSync(join(tmpdir(), 'profile run '));
   try {
