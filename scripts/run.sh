@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
+export OPENCODE_PROFILE_XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export OPENCODE_PROFILE_XDG_DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+export OPENCODE_PROFILE_XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
+export OPENCODE_PROFILE_XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+export OPENCODE_CONFIG_DIR="$ROOT"
+export XDG_CONFIG_HOME="$ROOT/.runtime/config"
+export XDG_DATA_HOME="$ROOT/.runtime/data"
+export XDG_STATE_HOME="$ROOT/.runtime/state"
+export XDG_CACHE_HOME="$ROOT/.runtime/cache"
+export OPENCODE_DISABLE_CLAUDE_CODE=1 OPENCODE_DISABLE_EXTERNAL_SKILLS=1
+unset OPENCODE_CONFIG OPENCODE_CONFIG_CONTENT OPENCODE_TUI_CONFIG OPENCODE_PLUGIN_META_FILE OPENCODE_DB
+sh "$ROOT/scripts/setup.sh"
+exec opencode "$@"

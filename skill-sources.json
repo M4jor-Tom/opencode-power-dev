@@ -1,0 +1,4 @@
+[
+  {"name":"claude-plugins-official","url":"https://github.com/anthropics/claude-plugins-official.git","rev":"ed404106fcd80ba98ecb7c851e531dcb626d13b7","paths":["plugins/frontend-design/skills","plugins/claude-md-management/skills"]},
+  {"name":"ui-ux-pro-max-skill","url":"https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git","rev":"1307d97a72e6c1cda572cb65471ae5ce82995218","paths":[".claude/skills"]}
+]

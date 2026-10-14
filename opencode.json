@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "superpowers@git+https://github.com/obra/superpowers.git#b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+    "@dietrichgebert/ponytail@git+https://github.com/DietrichGebert/ponytail.git#0a4dd63ad4541f4f655c4108a295916f3c1d8fda"
+  ],
+  "mcp": { "context7": { "type": "remote", "url": "https://mcp.context7.com/mcp", "enabled": true } },
+  "skills": { "paths": [
+    "{env:OPENCODE_CONFIG_DIR}/.vendor/claude-plugins-official/plugins/frontend-design/skills",
+    "{env:OPENCODE_CONFIG_DIR}/.vendor/claude-plugins-official/plugins/claude-md-management/skills",
+    "{env:OPENCODE_CONFIG_DIR}/.vendor/ui-ux-pro-max-skill/.claude/skills"
+  ] }
+}

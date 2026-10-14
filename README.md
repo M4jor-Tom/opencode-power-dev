@@ -1,0 +1,7 @@
+# Native OpenCode power-dev profile
+
+Run `scripts/run.sh [OpenCode arguments...]` from any directory (OpenCode >=1.18.29; Node 24, Git and jq required). It installs pinned skill sources under ignored `.vendor/`, isolates profile state under `.runtime/`, then execs OpenCode without changing your project cwd. Run `sh scripts/check.sh` for local/CI checks. Local skills and commands are from tracked Pi power-dev assets adapted to native OpenCode; Superpowers and Ponytail are exact-revision native upstream plugins. Do not edit vendor files directly.
+
+Native `task`, `skill`, Context7 MCP, history/undo and instructions replace Pi-specific extension/MCP/subagent/rewind APIs; no Hermes searchable memory, Pi workflow control or guaranteed multi-model council. Native model/variant selection is provider-specific. Permission prompts remain active. The command guard is best-effort string matching (not shell security); use credentials without destructive access. Project configuration and home-level `.opencode` discovery remain enabled by OpenCode: XDG isolation is **not** a sandbox. The shell hook restores caller XDG settings to agent shell tools (e.g. gh/glab); HOME remains unchanged.
+
+No credentials are copied. Package manifests, plugin dependencies, auth and caches generated at runtime remain ignored. Check `scripts/check.sh`, then run `scripts/run.sh debug config`, `debug skill`, `debug agent`, `mcp list` in a disposable project to inspect native registration without model requests.

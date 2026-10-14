@@ -1,0 +1,12 @@
+/.vendor/
+/.runtime/
+/node_modules/
+/package.json
+/package-lock.json
+/bun.lock
+/bun.lockb
+/pnpm-lock.yaml
+/yarn.lock
+/.superpowers/
+/.ponytail*
+*.log
